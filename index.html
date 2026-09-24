@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lenia Autonomous Discovery - P4 Structural Skeleton (14B)</title>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- KaTeX Styles & Scripts -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+<style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #070a12; color: #e2e8f0; line-height: 1.6; padding: 2rem 1rem; margin: 0; }
+    .container { max-width: 1160px; margin: 0 auto; }
+    h1 { color: #38bdf8; text-align: center; margin-bottom: 0.2rem; font-size: 2.1rem; }
+    
+    .meta-panel {
+        background: #111726;
+        border-radius: 8px;
+        padding: 1.2rem 1.6rem;
+        margin: 1.2rem 0 1.8rem 0;
+        border: 1px solid #1f2a40;
+        font-size: 0.88rem;
+    }
+    .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 0.6rem 1.4rem;
+        margin-top: 0.5rem;
+    }
+    .meta-item strong { color: #38bdf8; }
+
+    .main-tab-bar {
+        display: flex;
+        gap: 0.8rem;
+        background: #090d16;
+        padding: 0.4rem;
+        border-radius: 10px;
+        border: 1px solid #1f2a40;
+        margin-bottom: 2rem;
+        justify-content: center;
+    }
+    .main-tab-btn {
+        background: #111726;
+        border: 1px solid #1f2a40;
+        color: #94a3b8;
+        font-size: 1rem;
+        padding: 0.65rem 1.8rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.2s ease;
+    }
+    .main-tab-btn:hover { color: #fff; background: #1a233a; }
+    .main-tab-btn.active {
+        background: #0284c7;
+        color: #ffffff;
+        border-color: #38bdf8;
+        box-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+    }
+    .main-tab-content { display: none; }
+    .main-tab-content.active { display: block; }
+
+    .synthesis-card {
+        background: #111726;
+        border-left: 4px solid #10b981;
+        border-radius: 8px;
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 2rem;
+        font-size: 0.95rem;
+        color: #f1f5f9;
+    }
+
+    .matrix-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0 2rem 0;
+        background: #111726;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #1f2a40;
+    }
+    .matrix-table th, .matrix-table td {
+        padding: 0.9rem 0.6rem;
+        text-align: center;
+        border: 1px solid #1a233a;
+    }
+    .matrix-table th { background: #090d16; color: #38bdf8; font-size: 0.88rem; }
+    .matrix-cell {
+        border-radius: 6px;
+        padding: 0.6rem 0.4rem;
+    }
+
+    .compare-container {
+        background: #111726;
+        border: 1px solid #1f2a40;
+        border-radius: 12px;
+        padding: 1.6rem;
+        margin-bottom: 2rem;
+    }
+    .compare-selectors {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        margin-bottom: 1.4rem;
+        flex-wrap: wrap;
+    }
+    .compare-select-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    select {
+        background: #090d16;
+        color: #e2e8f0;
+        border: 1px solid #334155;
+        padding: 0.45rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.88rem;
+    }
+    .compare-view {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    @media (max-width: 820px) {
+        .compare-view { grid-template-columns: 1fr; }
+    }
+    .compare-panel {
+        background: #090d16;
+        border: 1px solid #1a233a;
+        border-radius: 8px;
+        padding: 1.2rem;
+        text-align: center;
+    }
+    .compare-panel img { width: 100%; border-radius: 6px; background: #000; min-height: 180px; object-fit: contain; }
+
+    .morph-wrapper { display: flex; flex-direction: column; align-items: center; background: #090d16; border-radius: 8px; padding: 1.2rem; margin: 1rem 0; border: 1px solid #1a233a; }
+    .morph-canvas { background: #020617; border-radius: 6px; border: 1px solid #1a233a; }
+    .morph-controls { display: flex; align-items: center; gap: 1rem; margin-top: 0.8rem; width: 100%; max-width: 600px; justify-content: center; }
+
+    .gen-card {
+        background: #090d16;
+        border: 1px solid #1f2a40;
+        border-radius: 8px;
+        padding: 1.2rem;
+        margin-top: 1rem;
+    }
+    .gen-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin: 0.8rem 0;
+    }
+    @media (max-width: 700px) {
+        .gen-grid { grid-template-columns: 1fr; }
+    }
+    .gen-grid img { width: 100%; border-radius: 6px; background: #000; }
+
+    .doc-section { background: #111726; border-radius: 10px; padding: 1.8rem; margin-bottom: 2rem; border: 1px solid #1f2a40; }
+    .doc-section h2 { color: #38bdf8; font-size: 1.3rem; margin-top: 0; border-bottom: 1px solid #1f2a40; padding-bottom: 0.5rem; }
+    .doc-section h3 { color: #f8fafc; font-size: 1.1rem; margin-top: 1.4rem; margin-bottom: 0.4rem; }
+    .doc-section p, .doc-section li { font-size: 0.95rem; color: #cbd5e1; line-height: 1.7; }
+    .formula-box { background: #090d16; padding: 0.8rem 1.2rem; border-radius: 6px; font-size: 1.05rem; margin: 0.8rem 0; text-align: center; border: 1px solid #1f2a40; }
+    .analogy-box { background: rgba(56, 189, 248, 0.08); border-left: 4px solid #38bdf8; padding: 0.8rem 1.2rem; border-radius: 0 6px 6px 0; margin: 1rem 0; font-size: 0.92rem; }
+
+    .code-box {
+        background: #090d16;
+        border: 1px solid #1f2a40;
+        border-radius: 6px;
+        padding: 0.8rem 1rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.85rem;
+        color: #38bdf8;
+        overflow-x: auto;
+        margin: 0.8rem 0;
+    }
+
+    details {
+        background: #111726;
+        border: 1px solid #1f2a40;
+        border-radius: 8px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 1.2rem;
+    }
+    summary { font-weight: bold; color: #38bdf8; cursor: pointer; font-size: 1.05rem; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>🧬 Lenia Autonomous Discovery: P4 Structural Skeleton</h1>
+    
+    <div class="meta-panel">
+        <div style="font-weight:bold; color:#f8fafc; margin-bottom:0.3rem;">Run Environment &amp; Hyperparameter Manifest</div>
+        <div class="meta-grid">
+            <div class="meta-item"><strong>Benchmark Mode:</strong> P4 Structural Skeleton Evolution</div>
+            <div class="meta-item"><strong>Dedicated Engine:</strong> qwen2.5-coder:14b</div>
+            <div class="meta-item"><strong>Max Displacement:</strong> 7.16 px (S_total: 69.8)</div>
+            <div class="meta-item"><strong>Outcome Status:</strong> ALIVE (Persistent Soliton Translation)</div>
+            <div class="meta-item"><strong>Simulation Arena:</strong> 100×100 Torus | dt=0.1 | Steps=80</div>
+            <div class="meta-item"><strong>Architecture:</strong> Dual-Memory Genetic Seed Inheritance</div>
+        </div>
+    </div>
+
+    <div class="main-tab-bar">
+        <button class="main-tab-btn active" id="btnMainReport" onclick="switchMainTab('report')">📊 P4 Discovery Report</button>
+        <button class="main-tab-btn" id="btnMainCustom" onclick="switchMainTab('custom')">🛠️ Hacking &amp; Customization Guide</button>
+        <button class="main-tab-btn" id="btnMainGuide" onclick="switchMainTab('guide')">📘 Mathematical Architecture</button>
+    </div>
+
+    <!-- TAB 1: P4 EXPERIMENT REPORT -->
+    <div id="main-tab-report" class="main-tab-content active">
+
+        <div class="synthesis-card">
+            <strong style="color:#10b981; font-size:1.05rem;">🤖 Executive Synthesis for qwen2.5-coder:14b:</strong>
+            <p style="margin:0.5rem 0 0 0; line-height:1.7;">
+                The 14B model operating under the P4 (Structural Skeleton) strategy successfully synthesized non-linear functions that broke parity symmetry on the asymmetric crescent wavefront domain. By composing a multi-ring localized kernel with a bounded reaction growth function, the model produced a persistent soliton achieving <strong>7.16 px displacement</strong> (Score: 69.8) while sustaining mass balance over 80 continuous steps.
+            </p>
+        </div>
+
+        <div class="doc-section">
+            <h2>1.0 Model Performance Summary</h2>
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th>Model Engine</th>
+                        <th>Target Strategy</th>
+                        <th>Max Displacement</th>
+                        <th>Best Score (S_total)</th>
+                        <th>Final Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="font-weight:bold; color:#38bdf8;">qwen2.5-coder:14b</td>
+                        <td style="color:#cbd5e1;">P4 Structural Skeleton</td>
+                        <td style="font-weight:bold; color:#10b981; font-size:1.1rem;">7.16 px</td>
+                        <td style="font-weight:bold; color:#38bdf8; font-size:1.1rem;">69.8 / 100.0</td>
+                        <td><span style="background:#10b981; font-size:0.8rem; padding:0.2rem 0.6rem; border-radius:4px; color:#fff; font-weight:bold;">ALIVE</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="compare-container">
+            <h2 style="color:#38bdf8; font-size:1.3rem; margin-top:0;">2.0 Comparative Playback Inspector</h2>
+            <div class="compare-selectors">
+                <div class="compare-select-group">
+                    <label style="color:#38bdf8; font-weight:bold;">Slot A:</label>
+                    <select id="selectGenA"></select>
+                </div>
+                <div class="compare-select-group">
+                    <label style="color:#34d399; font-weight:bold;">Slot B:</label>
+                    <select id="selectGenB"></select>
+                </div>
+            </div>
+
+            <div class="compare-view">
+                <div class="compare-panel" id="panelA">
+                    <h3 style="color:#38bdf8; margin:0 0 0.5rem 0;" id="titleA">Slot A</h3>
+                    <div style="font-size:0.85rem; color:#94a3b8; margin-bottom:0.5rem;" id="metaA">-</div>
+                    <div style="text-align:left; background:#111726; padding:0.8rem; border-radius:6px; margin-top:0.6rem; font-size:0.85rem;" id="thoughtA"></div>
+                    <div style="text-align:left; background:#111726; padding:0.6rem; border-radius:6px; margin-top:0.4rem; font-size:0.82rem;" id="mathA"></div>
+                </div>
+                <div class="compare-panel" id="panelB">
+                    <h3 style="color:#34d399; margin:0 0 0.5rem 0;" id="titleB">Slot B</h3>
+                    <div style="font-size:0.85rem; color:#94a3b8; margin-bottom:0.5rem;" id="metaB">-</div>
+                    <div style="text-align:left; background:#111726; padding:0.8rem; border-radius:6px; margin-top:0.6rem; font-size:0.85rem;" id="thoughtB"></div>
+                    <div style="text-align:left; background:#111726; padding:0.6rem; border-radius:6px; margin-top:0.4rem; font-size:0.82rem;" id="mathB"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="doc-section">
+            <h2>3.0 Score Trajectory (14B P4 Optimization Path)</h2>
+            <div style="position:relative; height:340px; width:100%;">
+                <canvas id="p4TimelineChart"></canvas>
+            </div>
+        </div>
+
+        <div class="doc-section">
+            <h2>4.0 Mathematical Function Morphing Animator</h2>
+            <div class="morph-wrapper">
+                <canvas id="morphCanvas" class="morph-canvas" width="620" height="190"></canvas>
+                <div class="morph-controls">
+                    <button class="btn btn-primary" id="btnMorphPlay" style="background:#0284c7; color:#fff; border:none; padding:0.4rem 1rem; border-radius:6px; cursor:pointer;">▶ Play Morphing</button>
+                    <input type="range" id="morphSlider" min="1" max="82" value="1" style="flex-grow:1;">
+                    <span style="font-size:0.85rem; color:#38bdf8; font-weight:bold; min-width:60px;" id="morphGenLabel">Gen 1</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="doc-section">
+            <h2>5.0 Champion Generation Dossier</h2>
+            <div class="gen-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                    <strong style="color:#f8fafc; font-size:1.1rem;">14B P4 All-Time Champion Soliton</strong>
+                    <span style="background:#10b981; font-size:0.75rem; padding:0.2rem 0.6rem; border-radius:9999px; color:#fff; font-weight:bold;">ALIVE</span>
+                    <span style="color:#94a3b8; font-size:0.85rem;">Move: <strong>7.16px</strong> | S_total: <strong>69.8</strong> (V: 74.5, M: 93.7)</span>
+                </div>
+                <div style="background:#111726; padding:0.7rem 1rem; border-radius:6px; border-left:3px solid #38bdf8; font-size:0.85rem; margin-bottom:0.6rem;">
+                    <strong style="color:#38bdf8;">Evolutionary Hypothesis:</strong>
+                    <div style="color:#cbd5e1; margin-top:0.2rem; white-space:pre-wrap;">- Multi-ring radial kernel composition: central depression combined with an elevated reaction ring to stabilize the crescent wavefront.<br/>- Highly restrictive growth window with a strong negative decay penalty in the wake to suppress uncontrolled mass inflation.</div>
+                </div>
+                <div style="background:#111726; padding:0.6rem 1rem; border-radius:6px; margin-bottom:0.6rem; border-left:3px solid #10b981;">
+                    <div style="font-size:0.85rem; color:#38bdf8;">$$K(r) = \max\left(0, 1 - r^2\right) \cdot \exp\left(-\frac{(r - 0.45)^2}{0.08}\right)$$</div>
+                    <div style="font-size:0.85rem; color:#34d399; margin-top:0.2rem;">$$G(u) = \operatorname{clip}\left(3.0 \tanh\left(15.0(u - 0.28)\right) - 1.5, -1.0, 1.0\right) \cdot \max\left(0.0, 1.0 - 2.5|u - 0.32\vert{}\right)$$</div>
+                </div>
+                <div style="font-size:0.82rem; color:#94a3b8; margin-top:0.4rem;">
+                    <strong>Dynamics:</strong> High-speed coherent translation: displacement reached 7.16px with controlled trailing mass across 80 steps.
+                </div>
+                <details style="margin-top:0.5rem; background:#070a12; border:1px solid #1f2a40; padding:0.4rem 0.8rem;">
+                    <summary style="font-size:0.75rem; color:#64748b;">View Python Code</summary>
+                    <pre class="code-box" style="margin:0.4rem 0 0 0; font-size:0.75rem;"><code>def kernel_func(r):
+    return np.maximum(0.0, 1.0 - np.square(r)) * np.exp(-np.square(r - 0.45) / 0.08)
+
+def growth_func(u):
+    raw_g = 3.0 * np.tanh(15.0 * (u - 0.28)) - 1.5
+    window = np.maximum(0.0, 1.0 - 2.5 * np.abs(u - 0.32))
+    return np.clip(raw_g, -1.0, 1.0) * window</code></pre>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: HACKING & CUSTOMIZATION GUIDE -->
+    <div id="main-tab-custom" class="main-tab-content">
+        <div class="doc-section">
+            <h2>🛠️ Experiment Hacking &amp; Parameter Tuning Guide</h2>
+            <p>Every aspect of the exploration loop is fully open and modular. You can easily modify physical hyperparameters, simulation grids, fitness weightings, and prompt philosophies in <code>run.py</code>.</p>
+
+            <h3>1. Modifying Simulation Hyperparameters</h3>
+            <p>The core continuous automaton dynamics are governed by the <code>LeniaSimulator</code> initialization in <code>run.py</code>:</p>
+            <pre class="code-box" style="color:#e2e8f0;"><code># Located inside run.py -> main() and LeniaSimulator.__init__()
+sim = LeniaSimulator(
+    size=100,        # Spatial grid resolution (100x100 torus)
+    dt=0.1,          # Numerical integration timestep Δt (smaller = more stable, larger = faster)
+    max_steps=80,    # Number of simulation steps per evaluation (80 steps ≈ 8 seconds of continuous time)
+    radius=13        # Neighborhood kernel radius R (in grid cells)
+)</code></pre>
+            <ul>
+                <li><strong>Increase <code>max_steps</code> (e.g., 120 - 160):</strong> Forces the LLM to search for long-term thermodynamic stability rather than short-lived transient solitons.</li>
+                <li><strong>Adjust <code>dt</code> (e.g., 0.05):</strong> Resolves numerical stiffness when evaluating steep algebraic growth gradients.</li>
+            </ul>
+
+            <h3>2. Customizing Initial Fields (Breaking Symmetry)</h3>
+            <p>The initial state generator is located in <code>LeniaSimulator.init_state()</code>. You can customize the shape to test different topological seeds:</p>
+            <pre class="code-box" style="color:#e2e8f0;"><code>def init_state(self):
+    y, x = np.ogrid[: self.size, : self.size]
+    dx = x - self.mid
+    dy = y - self.mid
+    r = np.sqrt(dx**2 + dy**2) / 8.0
+
+    # 1. Base localized Gaussian spot
+    base = np.exp(-0.5 * (r - 0.7) ** 2 / (0.35**2))
+    
+    # 2. Directional polarity modulation (Crescent Wavefront)
+    theta = np.arctan2(dy, dx)
+    polarity = 0.5 + 0.5 * np.cos(theta - np.pi / 4.0)
+
+    A = base * (polarity ** 1.5)
+    return np.clip(np.where(r > 1.8, 0.0, A), 0.0, 1.0)</code></pre>
+
+            <h3>3. Adjusting the Fitness Function &amp; Mobility Penalty</h3>
+            <p>The multi-objective reward is evaluated in <code>compute_meta_score_detailed()</code>:</p>
+            <pre class="code-box" style="color:#e2e8f0;"><code># S_viability: Penalizes mass explosion or starvation away from mass_ratio = 1.0
+s_viability = 100.0 * (step_ratio * (0.6 + 0.4 * mass_balance))
+
+# S_mobility: Hyperbolic tangent mapping of center-of-mass net displacement
+s_mobility = 5.0 + 95.0 * math.tanh(math.sqrt(disp) / 1.5)
+
+# Total Multiplicative Fitness
+s_total = (s_viability * s_mobility) / 100.0</code></pre>
+            <div class="analogy-box">
+                <strong>Tuning Tip:</strong> If the model creates solitons that move fast but inflate in mass, sharpen the mass penalty in <code>mass_balance = max(0.0, 1.0 - 2.0 * abs(mass_ratio - 1.0))</code>.
+            </div>
+
+            <h3>4. Customizing the LLM System Prompt &amp; Strategies</h3>
+            <p>The strategy guidelines and AST execution rules are stored in <code>P4_PHILOSOPHY</code> and <code>SYSTEM_PROMPT</code> at the top of <code>run.py</code>. You can introduce new physical concepts (e.g., fluid vortex dynamics, advection terms, or soliton collision resilience) directly into the prompt.</p>
+        </div>
+    </div>
+
+    <!-- TAB 3: ARCHITECTURE GUIDE -->
+    <div id="main-tab-guide" class="main-tab-content">
+        <div class="doc-section">
+            <h2>📘 Continuous Lenia Governing Equations</h2>
+            <p>Continuous Lenia generalizes discrete cellular automata to a smooth continuous space and time continuum:</p>
+            <div class="formula-box">
+                $$A(x, t + \Delta t) = \operatorname{clip}\left( A(x, t) + \Delta t \cdot G( (K * A)(x, t) ), \; 0, \; 1 \right)$$
+            </div>
+            <p>Under Strategy P4 (Structural Skeleton), the kernel $K(r)$ and growth function $G(u)$ are constructed via functional composition to create sharp wavefront activation and trailing decay.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    const P4_14B_GENS = [
+        {
+            gen: 1, score: 45.0, displacement: 1.10, status: "DRIFTING",
+            thought: "Initial rational functional composition to initiate kinetic translation.",
+            latex_kernel: "K(r) = \\max(0, 1 - r^2) \\cdot \\exp(-r^2 / 0.1)",
+            latex_growth: "G(u) = 2.0 \\tanh(10(u - 0.3)) - 1.0",
+            k_curve: Array.from({length: 100}, (_, i) => Math.max(0, 1 - (i/100)**2) * Math.exp(-((i/100)**2)/0.1)),
+            g_curve: Array.from({length: 100}, (_, i) => Math.min(1, Math.max(-1, 2*Math.tanh(10*(i/100 - 0.3)) - 1)))
+        },
+        {
+            gen: 15, score: 52.3, displacement: 2.45, status: "DRIFTING",
+            thought: "Tuning radial peak position to strengthen wavefront drive.",
+            latex_kernel: "K(r) = \\max(0, 1 - r^2) \\cdot \\exp(-(r - 0.25)^2 / 0.05)",
+            latex_growth: "G(u) = \\operatorname{clip}(2.5 \\tanh(12(u - 0.28)) - 1.2, -1, 1)",
+            k_curve: Array.from({length: 100}, (_, i) => Math.max(0, 1 - (i/100)**2) * Math.exp(-((i/100 - 0.25)**2)/0.05)),
+            g_curve: Array.from({length: 100}, (_, i) => Math.min(1, Math.max(-1, 2.5*Math.tanh(12*(i/100 - 0.28)) - 1.2)))
+        },
+        {
+            gen: 35, score: 61.5, displacement: 4.80, status: "ALIVE",
+            thought: "Narrowing growth window to suppress mass inflation in the trailing wake.",
+            latex_kernel: "K(r) = \\max(0, 1 - r^2) \\cdot \\exp(-(r - 0.35)^2 / 0.06)",
+            latex_growth: "G(u) = \\operatorname{clip}(2.8 \\tanh(14(u - 0.28)) - 1.4, -1, 1) \\cdot \\max(0, 1 - 2|u - 0.3|)",
+            k_curve: Array.from({length: 100}, (_, i) => Math.max(0, 1 - (i/100)**2) * Math.exp(-((i/100 - 0.35)**2)/0.06)),
+            g_curve: Array.from({length: 100}, (_, i) => {
+                const raw = 2.8*Math.tanh(14*(i/100 - 0.28)) - 1.4;
+                const w = Math.max(0, 1 - 2*Math.abs(i/100 - 0.3));
+                return Math.min(1, Math.max(-1, raw)) * w;
+            })
+        },
+        {
+            gen: 82, score: 69.8, displacement: 7.16, status: "ALIVE",
+            thought: "Champion soliton: localized elevated ring with restricted life window suppressing wake expansion.",
+            latex_kernel: "K(r) = \\max(0, 1 - r^2) \\cdot \\exp(-(r - 0.45)^2 / 0.08)",
+            latex_growth: "G(u) = \\operatorname{clip}(3.0 \\tanh(15(u - 0.28)) - 1.5, -1, 1) \\cdot \\max(0, 1 - 2.5|u - 0.32|)",
+            k_curve: Array.from({length: 100}, (_, i) => Math.max(0, 1 - (i/100)**2) * Math.exp(-((i/100 - 0.45)**2)/0.08)),
+            g_curve: Array.from({length: 100}, (_, i) => {
+                const raw = 3.0*Math.tanh(15*(i/100 - 0.28)) - 1.5;
+                const w = Math.max(0, 1 - 2.5*Math.abs(i/100 - 0.32));
+                return Math.min(1, Math.max(-1, raw)) * w;
+            })
+        }
+    ];
+
+    function renderMathSafely(element) {
+        if (window.renderMathInElement) {
+            renderMathInElement(element, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ],
+                throwOnError: false
+            });
+        }
+    }
+
+    window.switchMainTab = function(tabKey) {
+        document.querySelectorAll('.main-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.main-tab-content').forEach(c => c.classList.remove('active'));
+        if (tabKey === 'report') {
+            document.getElementById('btnMainReport').classList.add('active');
+            document.getElementById('main-tab-report').classList.add('active');
+        } else if (tabKey === 'custom') {
+            document.getElementById('btnMainCustom').classList.add('active');
+            document.getElementById('main-tab-custom').classList.add('active');
+        } else {
+            document.getElementById('btnMainGuide').classList.add('active');
+            document.getElementById('main-tab-guide').classList.add('active');
+            renderMathSafely(document.getElementById('main-tab-guide'));
+        }
+    };
+
+    // Populate Selectors
+    const selA = document.getElementById('selectGenA');
+    const selB = document.getElementById('selectGenB');
+    P4_14B_GENS.forEach(g => {
+        selA.appendChild(new Option(`Gen ${g.gen} (${g.status})`, g.gen));
+        selB.appendChild(new Option(`Gen ${g.gen} (${g.status})`, g.gen));
+    });
+    if (selB.options.length > 1) selB.selectedIndex = selB.options.length - 1;
+
+    function updateCompareView() {
+        const valA = parseInt(selA.value);
+        const itemA = P4_14B_GENS.find(g => g.gen === valA);
+        if (itemA) {
+            document.getElementById('titleA').innerText = `14B P4 (Gen ${itemA.gen})`;
+            document.getElementById('metaA').innerText = `Score: ${itemA.score.toFixed(1)} | Move: ${itemA.displacement.toFixed(2)}px | ${itemA.status}`;
+            document.getElementById('thoughtA').innerHTML = `<strong>Hypothesis:</strong><br/>${itemA.thought}`;
+            document.getElementById('mathA').innerHTML = `<div style="color:#38bdf8;">$$${itemA.latex_kernel}$$</div><div style="color:#34d399; margin-top:4px;">$$${itemA.latex_growth}$$</div>`;
+            renderMathSafely(document.getElementById('mathA'));
+        }
+
+        const valB = parseInt(selB.value);
+        const itemB = P4_14B_GENS.find(g => g.gen === valB);
+        if (itemB) {
+            document.getElementById('titleB').innerText = `14B P4 (Gen ${itemB.gen})`;
+            document.getElementById('metaB').innerText = `Score: ${itemB.score.toFixed(1)} | Move: ${itemB.displacement.toFixed(2)}px | ${itemB.status}`;
+            document.getElementById('thoughtB').innerHTML = `<strong>Hypothesis:</strong><br/>${itemB.thought}`;
+            document.getElementById('mathB').innerHTML = `<div style="color:#38bdf8;">$$${itemB.latex_kernel}$$</div><div style="color:#34d399; margin-top:4px;">$$${itemB.latex_growth}$$</div>`;
+            renderMathSafely(document.getElementById('mathB'));
+        }
+    }
+
+    selA.onchange = updateCompareView;
+    selB.onchange = updateCompareView;
+    updateCompareView();
+
+    // Chart.js Timeline
+    try {
+        const ctx = document.getElementById('p4TimelineChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: P4_14B_GENS.map(g => `Gen ${g.gen}`),
+                datasets: [{
+                    label: 'qwen2.5-coder:14b P4 (Total Score S_total)',
+                    data: P4_14B_GENS.map(g => g.score),
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.25
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { color: '#1a233a' }, ticks: { color: '#94a3b8' } },
+                    y: { grid: { color: '#1a233a' }, ticks: { color: '#38bdf8' }, title: { display: true, text: 'Total Score (0 - 100)', color: '#38bdf8' }, min: 30, max: 80 }
+                }
+            }
+        });
+    } catch(e) { console.error("Chart error:", e); }
+
+    // Morph Canvas
+    const morphCanvas = document.getElementById('morphCanvas');
+    const mCtx = morphCanvas.getContext('2d');
+    const morphSlider = document.getElementById('morphSlider');
+    const morphGenLabel = document.getElementById('morphGenLabel');
+    const btnPlay = document.getElementById('btnMorphPlay');
+    let morphTimer = null;
+
+    function drawMorph(progress) {
+        const kA = P4_14B_GENS[0].k_curve;
+        const kB = P4_14B_GENS[P4_14B_GENS.length - 1].k_curve;
+        const gA = P4_14B_GENS[0].g_curve;
+        const gB = P4_14B_GENS[P4_14B_GENS.length - 1].g_curve;
+        const alpha = Math.min(1.0, Math.max(0.0, progress));
+
+        mCtx.fillStyle = '#020617';
+        mCtx.fillRect(0, 0, morphCanvas.width, morphCanvas.height);
+
+        // Kernel Curve
+        mCtx.strokeStyle = '#38bdf8';
+        mCtx.lineWidth = 2;
+        mCtx.beginPath();
+        for (let i = 0; i < kA.length; i++) {
+            const v = (kA[i] || 0) * (1 - alpha) + (kB[i] || 0) * alpha;
+            const x = 30 + (i / (kA.length - 1)) * 250;
+            const y = 165 - Math.min(Math.max(v, 0), 2.5) * 60;
+            if (i === 0) mCtx.moveTo(x, y); else mCtx.lineTo(x, y);
+        }
+        mCtx.stroke();
+
+        // Growth Curve
+        mCtx.strokeStyle = '#34d399';
+        mCtx.lineWidth = 2;
+        mCtx.beginPath();
+        for (let i = 0; i < gA.length; i++) {
+            const v = (gA[i] || -1) * (1 - alpha) + (gB[i] || -1) * alpha;
+            const x = 340 + (i / (gA.length - 1)) * 250;
+            const y = 100 - v * 60;
+            if (i === 0) mCtx.moveTo(x, y); else mCtx.lineTo(x, y);
+        }
+        mCtx.stroke();
+    }
+
+    morphSlider.oninput = function() {
+        const progress = (parseFloat(this.value) - 1) / (parseFloat(this.max) - 1);
+        morphGenLabel.innerText = `Gen ${Math.round(this.value)}`;
+        drawMorph(progress);
+    };
+
+    btnPlay.onclick = function() {
+        if (morphTimer) {
+            clearInterval(morphTimer); morphTimer = null; this.innerText = '▶ Play Morphing';
+        } else {
+            this.innerText = '⏸ Pause';
+            morphTimer = setInterval(() => {
+                let v = parseFloat(morphSlider.value) + 1;
+                if (v > parseFloat(morphSlider.max)) v = 1;
+                morphSlider.value = v;
+                morphGenLabel.innerText = `Gen ${Math.round(v)}`;
+                drawMorph((v - 1) / (parseFloat(morphSlider.max) - 1));
+            }, 60);
+        }
+    };
+
+    drawMorph(0.0);
+    renderMathSafely(document.body);
+});
+</script>
+</body>
+</html>
