@@ -292,7 +292,7 @@ class LeniaSimulator:
                 "final_mass": 0.0,
                 "mass_trend": "Invalid Kernel (All zeros)",
                 "frames": [],
-                "reason": "Kernel evaluation resulted in all zeros or NaNs.",
+                "reason": "Kernel evaluation resulted in all zeros or NaNs.", "telemetry": None,
             }
 
         A = self.init_state()
@@ -309,6 +309,17 @@ class LeniaSimulator:
             U = fftconvolve(A, K, mode="same")
             G = growth_func(U)
             G = np.nan_to_num(G, nan=-1.0, posinf=1.0, neginf=-1.0)
+            if step == 0:
+                wave_mask = A > 0.02
+                if np.any(wave_mask):
+                    u_active, g_active = U[wave_mask], G[wave_mask]
+                    telemetry = {
+                        "u_min": float(np.min(u_active)), "u_mean": float(np.mean(u_active)), "u_max": float(np.max(u_active)),
+                        "g_min": float(np.min(g_active)), "g_mean": float(np.mean(g_active)), "g_max": float(np.max(g_active)),
+                        "pos_growth_ratio": float(np.mean(g_active > 0.0) * 100.0)
+                    }
+                else:
+                    telemetry = {"u_min": 0.0, "u_mean": 0.0, "u_max": 0.0, "g_min": -1.0, "g_mean": -1.0, "g_max": -1.0, "pos_growth_ratio": 0.0}
             A = np.clip(A + self.dt * G, 0.0, 1.0)
 
             cur_m = float(np.sum(A))
@@ -321,7 +332,7 @@ class LeniaSimulator:
                     "final_mass": cur_m,
                     "mass_trend": f"Starvation: Mass collapsed from {init_mass:.1f} to {cur_m:.1f} at Step {step}.",
                     "frames": frames,
-                    "reason": f"Extinction occurred at Step {step}.",
+                    "reason": f"Extinction occurred at Step {step}.", "telemetry": telemetry,
                 }
 
             if cur_m > (self.size**2) * 0.45:
@@ -333,7 +344,7 @@ class LeniaSimulator:
                     "final_mass": cur_m,
                     "mass_trend": f"Overcrowding Explosion: Mass inflated from {init_mass:.1f} to {cur_m:.1f} at Step {step}.",
                     "frames": frames,
-                    "reason": f"System saturated grid at Step {step}.",
+                    "reason": f"System saturated grid at Step {step}.", "telemetry": telemetry,
                 }
 
         tot_m = max(float(np.sum(A)), 1e-6)
@@ -358,7 +369,7 @@ class LeniaSimulator:
             "final_mass": tot_m,
             "mass_trend": f"Sustained: Mass shifted from initial {init_mass:.1f} to {tot_m:.1f}.",
             "frames": frames,
-            "reason": reason,
+            "reason": reason, "telemetry": telemetry,
         }
 
 
@@ -450,7 +461,7 @@ def sample_curves(kernel_func, growth_func, n_samples=100):
     return k_vals, g_vals
 
 
-def plot_to_base64(kernel_func, growth_func):
+def plot_to_base64(kernel_func, growth_func, telemetry=None):
     fig, axes = plt.subplots(1, 2, figsize=(7, 2.4), dpi=90)
     r = np.linspace(0, 1, 150)
     try:
@@ -464,7 +475,12 @@ def plot_to_base64(kernel_func, growth_func):
 
     u = np.linspace(0, 1, 150)
     try:
+        if telemetry and telemetry["u_max"] > telemetry["u_min"]:
+            axes[1].axvspan(telemetry["u_min"], telemetry["u_max"], color="#38bdf8", alpha=0.20, label=f"Observed U [{telemetry['u_min']:.2f}, {telemetry['u_max']:.2f}]")
+            axes[1].axvline(telemetry["u_mean"], color="#38bdf8", ls=":", alpha=0.7, lw=1.5)
         axes[1].plot(u, growth_func(u), color="#34d399", lw=2)
+        if telemetry:
+            axes[1].legend(loc="upper right", fontsize=7, facecolor="#090d16", edgecolor="#334155", labelcolor="#cbd5e1")
         axes[1].axhline(0, color="#64748b", ls="--", alpha=0.5)
     except Exception:
         pass
@@ -1402,7 +1418,8 @@ Both must accept EXACTLY ONE parameter (`r` or `u`).
             )
             print(f"       Dynamics: {res_sim['mass_trend']}")
 
-            if champion_record is None or score_dict["s_total"] > champion_record["score"]:
+            is_valid_champion = res_sim["status"] == "ALIVE" and score_dict["displacement"] >= 1.0
+        if is_valid_champion and (champion_record is None or score_dict["s_total"] > champion_record["score"]):
                 champion_record = {
                     "gen": gen,
                     "score": score_dict["s_total"],
